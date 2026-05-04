@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Données générées (reproductibles via le pipeline)
+data/raw/offres_emploi_it_maroc.json
+data/raw/referentiel_competences_it.json
+data/raw/entreprises_it_maroc.csv
+data_lake/bronze/
+data_lake/silver/
+data_lake/gold/
+analysis/output/*.png
+
+# Fichiers temporaires
+patch_notebook.py
+build_notebook.py

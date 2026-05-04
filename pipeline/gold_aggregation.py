@@ -19,22 +19,44 @@ def construire_gold(data_lake_root: str):
     # -- Table Gold 1 : Top competences par profil --
     print("[GOLD] Construction top_competences...")
     df_top_comp = con.execute(f"""
-        SELECT
-            profil,
-            famille,
-            competence,
-            COUNT(DISTINCT id_offre) AS nb_offres_mentionnent,
-            ROUND(COUNT(DISTINCT id_offre) * 100.0 /
-                (SELECT COUNT(DISTINCT id_offre) FROM '{silver_comp}'
-                 WHERE competence != 'non_detecte'), 2)
-                AS pct_offres_total,
-            RANK() OVER (
-                PARTITION BY profil
-                ORDER BY COUNT(DISTINCT id_offre) DESC
-            ) AS rang_dans_profil
-        FROM '{silver_comp}'
-        WHERE competence != 'non_detecte'
-        GROUP BY profil, famille, competence
+        WITH par_profil AS (
+            SELECT
+                profil,
+                famille,
+                competence,
+                COUNT(DISTINCT id_offre) AS nb_offres_mentionnent,
+                ROUND(COUNT(DISTINCT id_offre) * 100.0 /
+                    (SELECT COUNT(DISTINCT id_offre) FROM '{silver_comp}'
+                     WHERE competence != 'non_detecte'), 2)
+                    AS pct_offres_total,
+                RANK() OVER (
+                    PARTITION BY profil
+                    ORDER BY COUNT(DISTINCT id_offre) DESC
+                ) AS rang_dans_profil
+            FROM '{silver_comp}'
+            WHERE competence != 'non_detecte'
+            GROUP BY profil, famille, competence
+        ),
+        global_tous AS (
+            SELECT
+                'tous' AS profil,
+                famille,
+                competence,
+                COUNT(DISTINCT id_offre) AS nb_offres_mentionnent,
+                ROUND(COUNT(DISTINCT id_offre) * 100.0 /
+                    (SELECT COUNT(DISTINCT id_offre) FROM '{silver_comp}'
+                     WHERE competence != 'non_detecte'), 2)
+                    AS pct_offres_total,
+                RANK() OVER (
+                    ORDER BY COUNT(DISTINCT id_offre) DESC
+                ) AS rang_dans_profil
+            FROM '{silver_comp}'
+            WHERE competence != 'non_detecte'
+            GROUP BY famille, competence
+        )
+        SELECT * FROM par_profil
+        UNION ALL
+        SELECT * FROM global_tous
         ORDER BY profil, rang_dans_profil
     """).df()
     df_top_comp.to_parquet(gold_path / 'top_competences.parquet', index=False)

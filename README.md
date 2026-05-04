@@ -1,78 +1,43 @@
-# Mexora RH Intelligence — Data Lake Emploi IT Maroc
+# Mexora RH Intelligence - Pipeline Data Lake
 
-Pipeline complet Bronze/Silver/Gold pour analyser le marché de l'emploi IT marocain.
+Bienvenue dans le projet Data Lake **Mexora RH Intelligence**.
 
-## Structure du projet
+Ce projet démontre l'architecture complète d'un Data Lake (Bronze, Silver, Gold) pour analyser le marché de l'emploi IT au Maroc.
 
-```
-mexora_rh_lake/
-├── data/
-│   ├── raw/                          # Données brutes générées
-│   │   ├── offres_emploi_it_maroc.json
-│   │   ├── referentiel_competences_it.json
-│   │   └── entreprises_it_maroc.csv
-│   └── generate_data.py             # Générateur de données synthétiques
-├── pipeline/
-│   ├── bronze_ingestion.py          # Ingestion → Zone Bronze (JSON partitionné)
-│   ├── silver_transform.py          # Nettoyage → Zone Silver (Parquet)
-│   ├── silver_nlp.py                # Extraction compétences (NLP regex)
-│   ├── gold_aggregation.py          # Agrégats analytiques → Gold (Parquet+DuckDB)
-│   └── utils.py                     # Fonctions utilitaires partagées
-├── analysis/
-│   ├── analyse_marche.py            # 5 requêtes DuckDB + visualisations
-│   └── output/                      # Graphiques générés
-├── data_lake/
-│   ├── bronze/                      # JSON bruts par source/mois
-│   ├── silver/                      # Parquet nettoyés
-│   └── gold/                        # Parquet analytiques
-├── main.py                          # Orchestrateur du pipeline
-└── requirements.txt
-```
+## Comment exécuter le projet ?
 
-## Installation
+Pour des raisons de taille et de propreté, les données générées ont été supprimées de ce dossier. Voici les étapes pour reproduire intégralement le projet depuis zéro :
 
+### 1. Préparer l'environnement
+Assurez-vous d'avoir Python installé (idéalement 3.9+). Installez les dépendances requises :
 ```bash
 pip install -r requirements.txt
 ```
 
-## Exécution complète
-
+### 2. Générer les données brutes
+Exécutez le script de génération de données. Cela va créer 5 000 offres d'emploi fictives réalistes (et y injecter des anomalies pour tester la robustesse du pipeline) dans le dossier `data/raw/` :
 ```bash
-# 1. Générer les données synthétiques
-py -3 data/generate_data.py
-
-# 2. Lancer le pipeline complet (Bronze → Silver → Gold)
-py -3 main.py
-
-# 3. Lancer l'analyse de marché
-py -3 analysis/analyse_marche.py
+python data/generate_data.py
 ```
 
-## Architecture Data Lake
+### 3. Exécuter le pipeline ETL (Data Lake)
+Lancez le script principal pour faire passer les données à travers les zones Bronze, Silver, et Gold :
+```bash
+python main.py
+```
+*Le script va nettoyer, transformer, extraire les compétences via NLP et agréger les données dans des tables analytiques DuckDB au format Parquet.*
 
-| Zone   | Format  | Partitionnement         | Usage                        |
-|--------|---------|-------------------------|------------------------------|
-| Bronze | JSON    | par_source / par_mois   | Archive immuable brute       |
-| Silver | Parquet | offres_clean, comp.     | Données nettoyées typées     |
-| Gold   | Parquet | tables analytiques      | KPIs, dashboards, rapports   |
+### 4. Analyser les résultats
+Vous pouvez maintenant générer les graphiques d'analyse (qui s'enregistreront dans `analysis/output/`) :
+```bash
+python analysis/analyse_marche.py
+```
+Ou explorer les données de manière interactive en ouvrant le notebook Jupyter :
+```bash
+jupyter notebook analysis/analyse_marche_it_maroc.ipynb
+```
 
-## Tables Gold produites
-
-| Table                     | Lignes | Description                          |
-|---------------------------|--------|--------------------------------------|
-| top_competences.parquet   | 196    | Compétences par profil, famille, rang |
-| salaires_par_profil.parquet| 371   | Médiane/Q1/Q3 salaires par profil+ville|
-| offres_par_ville.parquet  | 1930   | Volume offres + % remote par ville   |
-| entreprises_recruteurs.parquet| 100 | Top 100 entreprises recruteurs      |
-| tendances_mensuelles.parquet| 322  | Évolution mensuelle 2023-2024        |
-
-## Résultats pipeline
-
-- **Bronze** : 5 000 offres → 69 fichiers partitionnés (rekrute/linkedin/marocannonce)
-- **Silver** : 5 000 offres nettoyées + 26 711 lignes compétences extraites
-- **Gold** : 5 tables analytiques prêtes pour DuckDB / Power BI
-- **Durée** : ~15 secondes sur machine locale
-
-## Stack technique
-
-- Python 3.11+ | pandas | pyarrow | duckdb | matplotlib | seaborn | plotly
+## Documentation
+- `conception_architecture.md` : Détaille l'architecture du projet.
+- `rapport_pipeline.md` : Détaille les traitements et règles de gestion effectués à chaque étape du pipeline.
+- `rapport_final_mexora.md` : Les insights business et RH extraits des données.
